@@ -1,0 +1,15 @@
+USE ContosoRetailDW
+
+DECLARE @USER VARCHAR(30)
+SET @USER = '     Maria Maria     '
+
+SELECT 
+	@USER,
+	LEN(@USER),
+	RTRIM(@USER),
+	LTRIM(@USER),
+	TRIM(@USER),
+	UPPER(@USER),
+	UPPER(TRIM(@USER)),
+	LOWER(@USER),
+	LOWER(TRIM(@USER))
