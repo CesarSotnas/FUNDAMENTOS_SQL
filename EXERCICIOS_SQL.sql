@@ -1,112 +1,58 @@
--- tabelas:
--- cidades
--- clientes
--- concessionarias
--- estados
--- fluxo
--- op_faturamento
--- veiculos
--- vendas
--- vendedores
+-- Banco de dados:
+USE AdventureWorksDW2022
 
--- Atividade 1: Seleção Simples
--- Descrição: Liste todos os veículos com tipo 'SUV Compacta' e valor inferior a 30.000,00.
+-- 1 - Quantidade de Clientes distintosTabela: 
+-- FactInternetSales
 
-SELECT 
-	tipo, 
-	valor 
+SELECT
+	COUNT(DISTINCT CustomerKey)
 FROM 
-	veiculos 
-WHERE 
-	tipo = 'SUV Compacta' AND valor < 3000000
+	FactInternetSales
 
--- Atividade 2: Junção Simples
--- Descrição: Exiba o nome dos clientes e o nome das concessionárias onde realizaram suas compras.
+-- 2 - Total de vendas na tabela FactInternetSales 
+-- Tabela: FactInternetSales
 
 SELECT 
-	c.cliente,
-	co.concessionaria
+	SUM(SalesAmount)
 FROM 
-	clientes c
-JOIN 
-	concessionarias co ON co.id_concessionarias = c.id_concessionarias
+	FactInternetSales
 
--- Atividade 3: Contagem e Agrupamento
--- Descrição: Conte quantos vendedores existem em cada concessionária.
+-- 3 - M�dia de vendas da tabela FactInternetSales
+-- Tabela: FactInternetSales
 
-SELECT 
-	co.concessionaria,
-	COUNT(v.nome) AS vendedores_por_concessionaria
+SELECT
+	AVG(SalesAmount) AS Media_Vendas
+FROM
+	FactInternetSales
+
+-- 4 - Total de vendas que foram carregadas em 2013
+-- Tabelas: FactInternetSales e DimDate
+-- Dica master: procure o campo ShipDate - n�o vale pedir ajuda para o professor.
+
+SELECT
+	SUM(fac.SalesAmount) AS Total_Vendas_2013
+FROM
+	FactInternetSales fac
+JOIN
+	DimDate dim ON dim.DateKey = fac.ShipDateKey
+WHERE
+	YEAR(fac.ShipDate) = 2013
+
+-- 5 - Pa�s que mais vendeu em 2013 
+-- Tabelas: FactInternetSales, DimDate, DimSalesTerritory
 	
-FROM concessionarias co
-JOIN
-	vendedores v ON v.id_concessionarias = co.id_concessionarias
-GROUP BY
-	co.concessionaria
-ORDER BY
-	vendedores_por_concessionaria DESC
-
--- Atividade 4: Subconsulta
--- Descrição: Encontre os veículos mais caros vendidos em cada tipo de veículo.
-
-SELECT 
-	v.tipo AS carro,
-	MAX(ve.valor_pago) AS valor_maximo
-FROM 
-	veiculos v
-JOIN
-	vendas ve ON ve.id_veiculos = v.id_veiculos
-GROUP BY
-	carro
-ORDER BY
-	valor_maximo DESC;
-
--- Atividade 5: Junção Múltipla
--- Descrição: Liste o nome do cliente, o veículo comprado e o valor pago, para todas as vendas.
-
 SELECT
-	c.cliente,
-	vei.tipo AS carro_comprado,
-	ven.valor_pago AS preco
-FROM clientes c
-JOIN 
-	vendas ven ON ven.id_clientes = c.id_clientes
-JOIN 
-	veiculos vei ON vei.id_veiculos = ven.id_veiculos
-ORDER BY 
-	c.cliente
-
--- Atividade 6: Filtro com Agregação
--- Descrição: Identifique as concessionárias que venderam mais de 5 veículos.
-
-SELECT
-	co.concessionaria,
-	COUNT(ven.*) AS total_vendas
-FROM 
-	concessionarias co
-JOIN 
-	vendas ven ON ven.id_concessionarias = co.id_concessionarias
+	sal.SalesTerritoryCountry,
+	SUM(fac.SalesAmount) As Total_Por_Pais
+FROM
+	FactInternetSales fac
 JOIN
-	veiculos vei ON vei.id_veiculos = ven.id_veiculos
+	DimDate dim ON dim.DateKey = fac.ShipDateKey
+JOIN
+	DimSalesTerritory sal ON sal.SalesTerritoryKey = fac.SalesTerritoryKey
+WHERE
+	YEAR(fac.ShipDate) = 2013
 GROUP BY
-	co.concessionaria
-HAVING 
-	COUNT(*) > 5
+	sal.SalesTerritoryCountry
 ORDER BY
-	total_vendas DESC
-
--- Atividade 7: Consulta com ORDER BY e LIMIT
--- Descrição: Liste os três veículos mais caros disponíveis.
-
-SELECT
-	tipo,
-	valor
-FROM 
-	veiculos
-ORDER BY
-	valor DESC
-LIMIT 3
-
--- Atividade 8: Consulta com Datas
--- Descrição: Selecione todos os veículos adicionados no último mês.
-
+	Total_Por_Pais DESC
